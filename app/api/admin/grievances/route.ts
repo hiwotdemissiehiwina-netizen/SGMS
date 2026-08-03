@@ -1,21 +1,21 @@
 import { NextResponse } from 'next/server';
-import connectToDatabase from '@/lib/mongodb';
-import Grievance from '@/models/Grievance';
-import Department from '@/models/Department';
+import connectMongo from '@/lib/mongodb';// ወይም የራስህ dbConnect ያለበት path (ለምሳሌ '../../../lib/dbConnect')
+import Grievance from '@/models/Grievance'; // ወይም የራስህ model path
 
-export async function GET() {
+export const dynamic = 'force-dynamic';
+
+export async function GET(request: Request) {
   try {
-    await connectToDatabase();
+    await connectMongo();
+    
+    // Grievances fetch የማድረግ ስራ
+    const grievances = await Grievance.find({}).sort({ createdAt: -1 });
 
-    // ሁሉንም ቅሬታዎች ከዲፓርትመንት መረጃቸው ጋር ማምጣት
-    const grievances = await Grievance.find({})
-      .populate('departmentId', 'name code')
-      .sort({ createdAt: -1 });
-
-    return NextResponse.json({ success: true, data: grievances }, { status: 200 });
-  } catch (error: any) {
+    return NextResponse.json({ success: true, grievances });
+  } catch (error) {
+    console.error('Fetch error:', error);
     return NextResponse.json(
-      { success: false, message: 'ቅሬታዎችን ማምጣት አልተቻለም', error: error.message },
+      { success: false, message: 'Failed to fetch grievances' },
       { status: 500 }
     );
   }
