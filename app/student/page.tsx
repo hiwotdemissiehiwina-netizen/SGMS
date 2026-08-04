@@ -194,41 +194,51 @@ export default function StudentPortalPage() {
                 </div>
               )}
 
-              {/* Department Dropdown */}
-              <div>
-                <label className="block text-sm font-semibold mb-1 text-gray-700">Target Department *</label>
-                <select
-                  required
-                  value={department}
-                  onChange={(e) => setDepartment(e.target.value)}
-                  className="w-full px-4 py-2.5 border border-[#e6dcce] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5c1d1d] bg-white text-gray-800"
-                >
-                  <option value="">-- Select Department --</option>
-                  <option value="Aesthetics">Aesthetics</option>
-                  <option value="Electrical & Electronics">Electrical & Electronics</option>
-                  <option value="ICT">ICT</option>
-                  <option value="Textile & Garment">Textile & Garment</option>
-                  <option value="Hotel & Tourism">Hotel & Tourism</option>
-                  <option value="Automotive Technology">Automotive Technology</option>
-                  <option value="Wood Work & Metal Technology">Wood Work & Metal Technology</option>
-                  <option value="Business & Finance">Business & Finance</option>
-                  <option value="Construction Technology">Construction Technology</option>
-                  <option value="Urban Agriculture">Urban Agriculture</option>
-                </select>
-              </div>
+            {/* Target Department Dropdown */}
+<div>
+  <label className="block text-sm font-semibold mb-1 text-gray-700">Target Department *</label>
+  <select
+    required
+    value={department}
+    onChange={(e) => setDepartment(e.target.value)}
+    className="w-full px-4 py-2.5 border border-[#e6dcce] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5c1d1d] bg-white text-gray-800"
+  >
+    <option value="">-- Select Department --</option>
+    <option value="Aesthetics">Aesthetics</option>
+    <option value="Electrical & Electronics">Electrical & Electronics</option>
+    <option value="ICT">ICT</option>
+    <option value="Textile & Garment">Textile & Garment</option>
+    <option value="Hotel & Tourism">Hotel & Tourism</option>
+    <option value="Automotive Technology">Automotive Technology</option>
+    <option value="Wood Work & Metal Technology">Wood Work & Metal Technology</option>
+    <option value="Business & Finance">Business & Finance</option>
+    <option value="Construction Technology">Construction Technology</option>
+    <option value="Urban Agriculture">Urban Agriculture</option>
+  </select>
+</div>
 
-              {/* Subject */}
-              <div>
-                <label className="block text-sm font-semibold mb-1 text-gray-700">Subject / Category *</label>
-                <input
-                  type="text"
-                  required
-                  value={subject}
-                  onChange={(e) => setSubject(e.target.value)}
-                  placeholder="e.g., Academic issue, Facility issue"
-                  className="w-full px-4 py-2.5 border border-[#e6dcce] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5c1d1d] bg-white text-gray-800"
-                />
-              </div>
+{/* Subject / Category Dropdown (10 Options) */}
+<div>
+  <label className="block text-sm font-semibold mb-1 text-gray-700">Grievance Subject / Category *</label>
+  <select
+    required
+    value={subject}
+    onChange={(e) => setSubject(e.target.value)}
+    className="w-full px-4 py-2.5 border border-[#e6dcce] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5c1d1d] bg-white text-gray-800"
+  >
+    <option value="">-- Select Issue Category --</option>
+    <option value="Academic & Grading Issue"> Academic & Grading Issue (የነጥብ/ውጤት ቅሬታ)</option>
+    <option value="ID Card & Registration"> ID Card & Registration (የአይዲ እና የምዝገባ ሁኔታ)</option>
+    <option value="Department & Class Schedule"> Department & Class Schedule (የክፍል እና የትምህርት ፕሮግራም)</option>
+    <option value="Facility & Classroom Maintenance">Facility & Classroom Maintenance (የክፍል እና የመሳሪያዎች ብልሽት)</option>
+    <option value="Administrative Delay">Administrative Delay (የአስተዳደር እና የሰነድ መዘግየት)</option>
+    <option value="Library & Learning Resources">Library & Learning Resources (የቤተ-መጽሐፍት አገልግሎት)</option>
+    <option value="Practical Workshop & Lab Equipment">Practical Workshop & Lab Equipment (የላቦራቶሪ/ወርክሾፕ ዕቃዎች)</option>
+    <option value="Staff & Instructor Conduct">Staff & Instructor Conduct (የመምህራን/ሰራተኞች አስተናጋጅነት)</option>
+    <option value="Student Welfare & Discipline">Student Welfare & Discipline (የተማሪዎች ደህንነት እና ስነ-ምግባር)</option>
+    <option value="Other General Inquiry">Other General Inquiry (ሌሎች አጠቃላይ ጥያቄዎች)</option>
+  </select>
+</div>
 
               {/* Description */}
               <div>
