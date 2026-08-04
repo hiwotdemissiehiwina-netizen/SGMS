@@ -131,24 +131,29 @@ export default function StudentComplaintPage() {
           </div>
 
           {/* Department Select */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">
-              Select Department
-            </label>
-            <select
-              value={selectedDepartmentId}
-              onChange={(e) => setSelectedDepartmentId(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#5c1d1d] bg-white"
-              required
-            >
-              <option value="">-- Select Department --</option>
-              {departments.map((dept) => (
-                <option key={dept._id} value={dept._id}>
-                  {dept.name} ({dept.code})
-                </option>
-              ))}
-            </select>
-          </div>
+          <div className="flex flex-col gap-2">
+  <label htmlFor="department" className="text-sm font-semibold text-stone-700">
+    Select Department
+  </label>
+  <select 
+    id="department" 
+    name="department" 
+    required
+    className="px-4 py-2.5 rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-amber-800 bg-white text-stone-800"
+  >
+    <option value="">-- Choose your department --</option>
+    <option value="Aesthetics">Aesthetics</option>
+    <option value="Electrical & Electronics">Electrical & Electronics</option>
+    <option value="ICT">ICT</option>
+    <option value="Textile & Garment">Textile & Garment</option>
+    <option value="Hotel & Tourism">Hotel & Tourism</option>
+    <option value="Automotive Technology">Automotive Technology</option>
+    <option value="Wood Work & Metal Technology">Wood Work & Metal Technology</option>
+    <option value="Business & Finance">Business & Finance</option>
+    <option value="Construction Technology">Construction Technology</option>
+    <option value="Urban Agriculture">Urban Agriculture</option>
+  </select>
+</div>
 
           {/* Reason / Complaint Text */}
           <div>

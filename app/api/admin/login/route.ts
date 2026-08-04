@@ -1,48 +1,57 @@
 import { NextResponse } from 'next/server';
-import dbConnect from '../../../../lib/mongodb'; // ወይም እንደ ፎልደርህ ርቀት መጠን (../../../)
-import Admin from '../../../../models/Admin'; // ወይም እንደ modelህ ቦታ
+import bcrypt from 'bcryptjs';
+import dbConnect from '@/lib/mongodb'; // የዳታቤዝ ግንኙነት ማስተካከያ (እንደ ፕሮጀክት አወቃቀርዎ ሊለያይ ይችላል)
+import Admin from '@/models/Admin';   // የ Mongoose Admin Model
 
-// 1. Next.js በ Build ወቅት Static Render እንዳያደርገው ይከላከላል
-export const dynamic = 'force-dynamic';
-
-export async function POST(request: Request) {
+export async function POST(req: Request) {
   try {
     await dbConnect();
 
-    const body = await request.json();
-    const { email, password } = body;
+    const { username, password } = await req.json();
 
-    // Login Logic
-    if (!email || !password) {
+    if (!username || !password) {
       return NextResponse.json(
-        { success: false, message: 'Email and password are required' },
+        { success: false, message: 'Please provide username and password' },
         { status: 400 }
       );
     }
 
-    const admin = await Admin.findOne({ email });
-    if (!admin || admin.password !== password) { // ማስታወሻ: Password hashing (bcrypt) መጠቀም ይመረጣል
+    // አድሚኑን በዩዘርናም መፈለግ
+    const admin = await Admin.findOne({ username });
+
+    if (!admin) {
       return NextResponse.json(
-        { success: false, message: 'Invalid credentials' },
+        { success: false, message: 'Invalid username or password' },
         { status: 401 }
       );
     }
 
+    // ፓስወርድ ማወዳደር (bcrypt ተጠቅመን)
+    const isMatch = await bcrypt.compare(password, admin.password);
+
+    if (!isMatch) {
+      return NextResponse.json(
+        { success: false, message: 'Invalid username or password' },
+        { status: 401 }
+      );
+    }
+
+    // የተሳካ ሎጊን ሪስፖንስ መመለስ
     return NextResponse.json({
       success: true,
       message: 'Login successful',
+      token: 'mock_secure_token_session', // ቶከን የሚጠቀሙ ከሆነ እዚህ ማስገባት ይቻላል
       admin: {
-        id: admin._id,
-        name: admin.name,
-        email: admin.email,
-        role: admin.role,
-        departmentId: admin.departmentId,
+        username: admin.username,
+        role: admin.role, // 'super-admin' ወይም 'admin' መሆኑን ዳታቤዙ ያመጣል
+        department: admin.department || null,
       },
     });
-  } catch (error) {
-    console.error('Login error:', error);
+
+  } catch (error: any) {
+    console.error('Admin Login Server Error:', error);
     return NextResponse.json(
-      { success: false, message: 'Internal Server Error' },
+      { success: false, message: 'Internal Server Error', error: error.message },
       { status: 500 }
     );
   }
