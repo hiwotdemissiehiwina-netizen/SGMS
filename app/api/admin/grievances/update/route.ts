@@ -1,48 +1,45 @@
 import { NextResponse } from 'next/server';
-import connectToDatabase from '@/lib/mongodb';
-import Grievance from '@/models/Grievance';
+import dbConnect from '../../../../../lib/mongodb';
+import Grievance from '../../../../../models/Grievance';
 
-export async function PUT(req: Request) {
+export const dynamic = 'force-dynamic';
+
+export async function PATCH(request: Request) {
   try {
-    await connectToDatabase();
-    const { id, status, responseMessage } = await req.json();
+    await dbConnect();
 
-    if (!id || !status) {
+    const body = await request.json();
+    const { grievanceId, status } = body;
+
+    if (!grievanceId || !status) {
       return NextResponse.json(
-        { success: false, message: 'ቅሬታ ID እና Status ያስፈልጋል' },
+        { success: false, message: 'Missing required fields' },
         { status: 400 }
       );
     }
 
-    const grievance = await Grievance.findById(id);
-    if (!grievance) {
+    const updatedGrievance = await Grievance.findByIdAndUpdate(
+      grievanceId,
+      { status },
+      { new: true }
+    );
+
+    if (!updatedGrievance) {
       return NextResponse.json(
-        { success: false, message: 'ቅሬታው አልተገኘም' },
+        { success: false, message: 'Grievance not found' },
         { status: 404 }
       );
     }
 
-    // Status ማስተካከል
-    grievance.status = status;
-
-    // ምላሽ ካለ መጨመር
-    if (responseMessage && responseMessage.trim() !== '') {
-      grievance.responses.push({
-        message: responseMessage,
-        createdAt: new Date(),
-      });
-    }
-
-    await grievance.save();
-
     return NextResponse.json({
       success: true,
-      message: 'የቅሬታው ሁኔታ በትክክል ተቀይሯል!',
-      data: grievance,
+      message: 'Status updated successfully',
+      grievance: updatedGrievance,
     });
-  } catch (error: any) {
+  } catch (error) {
+    console.error('Update Grievance Error:', error);
     return NextResponse.json(
-      { success: false, message: 'ማስተካከል አልተቻለም', error: error.message },
+      { success: false, message: 'Internal Server Error' },
       { status: 500 }
     );
   }
