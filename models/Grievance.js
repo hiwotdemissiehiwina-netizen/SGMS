@@ -1,18 +1,45 @@
-import mongoose, { Schema } from 'mongoose';
+import mongoose from 'mongoose';
 
-const grievanceSchema = new Schema(
-  {
-    studentName: { type: String, required: true },
-    studentId: { type: String, required: true },
-    reason: { type: String, required: true },
-    status: { type: String, default: 'pending' },
-    departmentId: { 
-      type: Schema.Types.ObjectId, 
-      ref: 'Department', 
-      required: true 
-    },
+const GrievanceSchema = new mongoose.Schema({
+  ticketId: { 
+    type: String, 
+    required: true, 
+    unique: true 
   },
-  { timestamps: true }
-);
+  studentName: { 
+    type: String, 
+    default: 'Anonymous' 
+  },
+  studentId: { 
+    type: String, 
+    default: 'N/A' 
+  },
+  department: { 
+    type: String, 
+    required: true 
+  },
+  subject: { 
+    type: String, 
+    required: true 
+  },
+  message: { 
+    type: String, 
+    required: true 
+  },
+  isAnonymous: { 
+    type: Boolean, 
+    default: false 
+  },
+  status: { 
+    type: String, 
+    enum: ['Pending', 'In Progress', 'Resolved'], 
+    default: 'Pending' 
+  },
+  responses: [{
+    responderName: String,
+    message: String,
+    createdAt: { type: Date, default: Date.now }
+  }]
+}, { timestamps: true });
 
-export default mongoose.models.Grievance || mongoose.model('Grievance', grievanceSchema);
+export default mongoose.models.Grievance || mongoose.model('Grievance', GrievanceSchema);
