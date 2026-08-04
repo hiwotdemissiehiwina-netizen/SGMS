@@ -1,65 +1,48 @@
 import { NextResponse } from 'next/server';
-import connectMongo from '@/lib/mongodb';
-import Department from '@/models/Department';
-import Admin from '@/models/Admin';
+import dbConnect from '../../../../lib/mongodb'; // ወይም እንደ ፎልደርህ ርቀት መጠን (../../../)
+import Admin from '../../../../models/Admin'; // ወይም እንደ modelህ ቦታ
+
+// 1. Next.js በ Build ወቅት Static Render እንዳያደርገው ይከላከላል
+export const dynamic = 'force-dynamic';
 
 export async function POST(request: Request) {
   try {
-    await connectMongo();
-
-    // Safety check to make sure Department schema is explicitly registered before populate
-    if (!Department) {
-      console.log('Department model initialized.');
-    }
+    await dbConnect();
 
     const body = await request.json();
-    const username = body.username ? String(body.username).trim() : '';
-    const password = body.password ? String(body.password).trim() : '';
+    const { email, password } = body;
 
-    if (!username || !password) {
+    // Login Logic
+    if (!email || !password) {
       return NextResponse.json(
-        { success: false, message: 'እባክዎን ዩዘርኔም እና ፓስወርድ ያስገቡ!' },
+        { success: false, message: 'Email and password are required' },
         { status: 400 }
       );
     }
 
-    // 1. Find Admin and populate Department
-    const admin = await Admin.findOne({
-      username: { $regex: new RegExp(`^${username}$`, 'i') }
-    }).populate('departmentId');
-
-    if (!admin) {
+    const admin = await Admin.findOne({ email });
+    if (!admin || admin.password !== password) { // ማስታወሻ: Password hashing (bcrypt) መጠቀም ይመረጣል
       return NextResponse.json(
-        { success: false, message: 'Invalid username or password!' },
+        { success: false, message: 'Invalid credentials' },
         { status: 401 }
       );
     }
 
-    // 2. Direct Plain Text Password Match
-    if (admin.password !== password) {
-      return NextResponse.json(
-        { success: false, message: 'Invalid username or password!' },
-        { status: 401 }
-      );
-    }
-
-    // 3. Success Response
     return NextResponse.json({
       success: true,
-      message: 'Login successful!',
+      message: 'Login successful',
       admin: {
         id: admin._id,
-        username: admin.username,
-        fullName: admin.fullName,
+        name: admin.name,
+        email: admin.email,
         role: admin.role,
-        department: admin.departmentId || null,
+        departmentId: admin.departmentId,
       },
     });
-
-  } catch (error: any) {
-    console.error('LOGIN API ERROR:', error);
+  } catch (error) {
+    console.error('Login error:', error);
     return NextResponse.json(
-      { success: false, message: error.message || 'Server Error' },
+      { success: false, message: 'Internal Server Error' },
       { status: 500 }
     );
   }
