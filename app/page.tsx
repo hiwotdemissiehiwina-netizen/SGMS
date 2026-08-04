@@ -8,10 +8,9 @@ export default function Home() {
       {/* Header (College Emblem & Name) */}
       <header className="w-full max-w-6xl flex items-center justify-between py-4 border-b border-amber-200">
         <div className="flex items-center gap-4">
-          {/* College Emblem / Logo */}
           <div className="relative w-14 h-14 md:w-16 md:h-16 rounded-full overflow-hidden shadow-md border-2 border-amber-900 bg-white flex items-center justify-center">
             <Image 
-              src="/logo.png" 
+              src="/logo.jpg" 
               alt="Tafari Makonnen Polytechnic College Emblem" 
               width={64} 
               height={64} 
@@ -49,19 +48,25 @@ export default function Home() {
           A secure and efficient digital system for students to submit and track grievances, and for administrators to provide timely resolutions.
         </p>
 
-        {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+        {/* Action Buttons (Student, Admin, Super Admin) */}
+        <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto justify-center">
           <Link 
             href="/student" 
-            className="px-8 py-3.5 bg-amber-800 hover:bg-amber-900 text-white rounded-xl shadow-lg font-medium transition duration-200 text-center"
+            className="px-6 py-3.5 bg-amber-800 hover:bg-amber-900 text-white rounded-xl shadow-lg font-medium transition duration-200 text-center"
           >
             Student Portal
           </Link>
           <Link 
             href="/admin/login" 
-            className="px-8 py-3.5 bg-stone-900 hover:bg-stone-800 text-white rounded-xl shadow-lg font-medium transition duration-200 text-center"
+            className="px-6 py-3.5 bg-stone-900 hover:bg-stone-800 text-white rounded-xl shadow-lg font-medium transition duration-200 text-center"
           >
-            Admin Portal
+            Department Admin Login
+          </Link>
+          <Link 
+            href="/admin/login" 
+            className="px-6 py-3.5 bg-amber-950 hover:bg-black text-white rounded-xl shadow-lg font-medium transition duration-200 text-center"
+          >
+            Super Admin Login
           </Link>
         </div>
       </div>
