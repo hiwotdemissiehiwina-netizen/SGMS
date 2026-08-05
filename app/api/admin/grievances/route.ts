@@ -1,23 +1,24 @@
 import { NextResponse } from 'next/server';
-import dbConnect from '../../../../lib/mongodb';
-import Grievance from '../../../../models/Grievance';
-import Department from '../../../../models/Department';
+import { supabase, shapeGrievance } from '@/lib/supabase';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET(request: Request) {
+export async function GET() {
   try {
-    await dbConnect();
+    const { data: rows, error } = await supabase
+      .from('grievances')
+      .select('*, departments:department_id(*)')
+      .order('created_at', { ascending: false });
 
-    const grievances = await Grievance.find({})
-      .populate('departmentId')
-      .sort({ createdAt: -1 });
+    if (error) throw error;
+
+    const grievances = (rows || []).map((row) => shapeGrievance(row));
 
     return NextResponse.json({ success: true, grievances });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Fetch error:', error);
     return NextResponse.json(
-      { success: false, message: 'Failed to fetch grievances' },
+      { success: false, message: error.message || 'Failed to fetch grievances' },
       { status: 500 }
     );
   }

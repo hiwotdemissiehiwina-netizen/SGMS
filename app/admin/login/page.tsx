@@ -35,7 +35,7 @@ export default function AdminLoginPage() {
 
         // Role-አቸውን አይቶ Redirect ማድረግ
         if (data.admin.role === 'super_admin') {
-          router.push('/super-admin');
+          router.push('/admin/super');
         } else {
           router.push('/admin');
         }

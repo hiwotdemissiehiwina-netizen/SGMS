@@ -1,11 +1,8 @@
 import { NextResponse } from 'next/server';
-import connectMongo from '@/lib/mongodb';
-import Grievance from '@/models/Grievance';
+import { supabase } from '@/lib/supabase';
 
 export async function PATCH(request: Request) {
   try {
-    await connectMongo();
-
     const { requestId, status } = await request.json();
 
     if (!requestId || !status) {
@@ -15,13 +12,16 @@ export async function PATCH(request: Request) {
       );
     }
 
-    const updatedRequest = await Grievance.findByIdAndUpdate(
-      requestId,
-      { status },
-      { new: true }
-    );
+    const { data: updated, error } = await supabase
+      .from('grievances')
+      .update({ status, updated_at: new Date().toISOString() })
+      .eq('id', requestId)
+      .select('*')
+      .maybeSingle();
 
-    if (!updatedRequest) {
+    if (error) throw error;
+
+    if (!updated) {
       return NextResponse.json(
         { success: false, message: 'Request not found' },
         { status: 404 }
@@ -31,7 +31,10 @@ export async function PATCH(request: Request) {
     return NextResponse.json({
       success: true,
       message: 'Status updated successfully',
-      request: updatedRequest,
+      request: {
+        _id: updated.id,
+        status: updated.status,
+      },
     });
   } catch (error: any) {
     console.error('UPDATE STATUS ERROR:', error);

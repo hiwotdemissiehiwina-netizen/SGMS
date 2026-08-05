@@ -1,21 +1,10 @@
 import { NextResponse } from 'next/server';
-import connectMongo from '@/lib/mongodb';
-import Grievance from '@/models/Grievance';
-import Department from '@/models/Department';
+import { supabase, shapeGrievance } from '@/lib/supabase';
 
 export async function GET(request: Request) {
   try {
-    await connectMongo();
-
-    if (!Department) {
-      console.log('Department model loaded');
-    }
-
     const { searchParams } = new URL(request.url);
     const departmentId = searchParams.get('departmentId');
-
-    console.log('-----------------------------------------');
-    console.log('FETCH REQUEST FOR DEPT ID:', departmentId);
 
     if (!departmentId) {
       return NextResponse.json(
@@ -24,10 +13,15 @@ export async function GET(request: Request) {
       );
     }
 
-    const requests = await Grievance.find({ departmentId }).sort({ createdAt: -1 });
+    const { data: rows, error } = await supabase
+      .from('grievances')
+      .select('*, departments:department_id(*)')
+      .eq('department_id', departmentId)
+      .order('created_at', { ascending: false });
 
-    console.log('FOUND REQUESTS COUNT:', requests.length);
-    console.log('-----------------------------------------');
+    if (error) throw error;
+
+    const requests = (rows || []).map((row) => shapeGrievance(row));
 
     return NextResponse.json({
       success: true,

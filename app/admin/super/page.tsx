@@ -27,7 +27,7 @@ export default function SuperAdminDashboard() {
       }
     } catch (err) {
       setError('Server connection error.');
-    } fontally: {
+    } finally {
       setLoading(false);
     }
   };
