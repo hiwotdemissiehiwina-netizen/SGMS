@@ -1,53 +1,53 @@
 import { NextResponse } from 'next/server';
-import { supabase, generateTicketId, shapeGrievance } from '@/lib/supabase';
+import connectToDatabase from '@/lib/mongodb';
+import Grievance from '@/models/Grievance';
+
+function generateTicketId() {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let randomStr = '';
+  for (let i = 0; i < 5; i++) {
+    randomStr += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return `TMPC-${randomStr}`;
+}
 
 export async function POST(req: Request) {
   try {
+    await connectToDatabase();
     const body = await req.json();
+
     const { departmentId, category, description, isAnonymous, studentId } = body;
 
     if (!departmentId || !category || !description) {
       return NextResponse.json(
-        { success: false, message: 'All required fields must be provided' },
+        { success: false, message: 'እባክዎን ሁሉንም አስፈላጊ መረጃዎች ይሙሉ' },
         { status: 400 }
       );
     }
 
     const ticketId = generateTicketId();
 
-    const insertRow: any = {
-      ticket_id: ticketId,
-      department_id: departmentId,
+    const grievance = await Grievance.create({
+      ticketId,
+      departmentId,
       category,
       description,
-      message: description,
-      is_anonymous: Boolean(isAnonymous),
-      student_id: isAnonymous ? null : studentId || null,
-      student_name: isAnonymous ? 'Anonymous' : 'N/A',
-      status: 'Pending',
-      responses: [],
-    };
-
-    const { data: row, error } = await supabase
-      .from('grievances')
-      .insert(insertRow)
-      .select('*, departments:department_id(*)')
-      .maybeSingle();
-
-    if (error) throw error;
+      isAnonymous: Boolean(isAnonymous),
+      studentId: isAnonymous ? null : studentId || null,
+    });
 
     return NextResponse.json(
       {
         success: true,
-        message: 'Grievance submitted successfully!',
-        ticketId: row.ticket_id,
-        data: shapeGrievance(row),
+        message: 'ቅሬታዎ በተሳካ ሁኔታ ተልኳል!',
+        ticketId: grievance.ticketId,
+        data: grievance,
       },
       { status: 201 }
     );
   } catch (error: any) {
     return NextResponse.json(
-      { success: false, message: 'Failed to submit grievance', error: error.message },
+      { success: false, message: 'ቅሬታውን መላክ አልተቻለም', error: error.message },
       { status: 500 }
     );
   }

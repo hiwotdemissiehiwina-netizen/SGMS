@@ -10,8 +10,8 @@ export function middleware(request: NextRequest) {
   const adminToken = request.cookies.get('adminToken')?.value;
   const userRole = request.cookies.get('adminRole')?.value;
 
-  // 1. Unauthenticated users ወደ /admin (እና /admin/super) ሲሄዱ ወደ Login ይመልሳቸዋል
-  if (pathname.startsWith('/admin') && !pathname.endsWith('/login')) {
+  // 1. Unauthenticated users ወደ /admin ወይም /super-admin ሲሄዱ ወደ Login ይመልሳቸዋል
+  if ((pathname.startsWith('/admin') || pathname.startsWith('/super-admin')) && !pathname.endsWith('/login')) {
     if (!adminToken) {
       const loginUrl = new URL('/admin/login', request.url);
       return NextResponse.redirect(loginUrl);
@@ -19,8 +19,8 @@ export function middleware(request: NextRequest) {
   }
 
   // 2. Department Admin ወደ Super Admin ገጽ እንዳይገባ ይከለክላል (Role Authorization)
-  if (pathname.startsWith('/admin/super')) {
-    if (userRole !== 'super_admin') {
+  if (pathname.startsWith('/super-admin') && !pathname.endsWith('/login')) {
+    if (userRole !== 'super-admin') {
       const unauthorizedUrl = new URL('/admin', request.url);
       return NextResponse.redirect(unauthorizedUrl);
     }
@@ -31,5 +31,5 @@ export function middleware(request: NextRequest) {
 
 // Middlewareው የሚሰራባቸውን የ Routes ድንበሮች መወሰኛ (Matcher)
 export const config = {
-  matcher: ['/admin/:path*'],
+  matcher: ['/admin/:path*', '/super-admin/:path*'],
 };

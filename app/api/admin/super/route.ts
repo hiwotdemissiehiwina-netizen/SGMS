@@ -1,75 +1,43 @@
 import { NextResponse } from 'next/server';
-import { supabase, shapeGrievance } from '@/lib/supabase';
-
-const THREE_DAYS_MS = 3 * 24 * 60 * 60 * 1000;
+import { cookies } from 'next/headers';
+import connectMongo from '@/lib/mongodb';
+import Grievance from '@/models/Grievance';
+import Admin from '@/models/Admin';
 
 export async function GET(request: Request) {
   try {
+    await connectMongo();
+
+    // 1. የገባውን Admin Username ከ URL Query ወይም ከ Cookie ማግኘት
     const { searchParams } = new URL(request.url);
     const username = searchParams.get('username');
 
-    // Fetch all grievances with department join
-    const { data: rows, error } = await supabase
-      .from('grievances')
-      .select('*, departments:department_id(*)')
-      .order('created_at', { ascending: false });
-
-    if (error) throw error;
-
-    const now = Date.now();
-    const threeDaysAgo = new Date(now - THREE_DAYS_MS).toISOString();
-
-    // Auto-escalate overdue Pending grievances (3+ days)
-    const overdueIds: string[] = [];
-    for (const row of rows || []) {
-      const isOverdue =
-        row.status === 'Pending' &&
-        !row.is_escalated &&
-        new Date(row.created_at).getTime() <= now - THREE_DAYS_MS;
-      if (isOverdue) overdueIds.push(row.id);
+    if (!username) {
+      return NextResponse.json(
+        { success: false, message: 'Username is required to fetch department data.' },
+        { status: 400 }
+      );
     }
 
-    if (overdueIds.length > 0) {
-      await supabase
-        .from('grievances')
-        .update({ is_escalated: true, status: 'Escalated', updated_at: new Date().toISOString() })
-        .in('id', overdueIds);
+    // 2. የዲኑን አካውንት መፈለግ እና Department መረጃውን ማምጣት
+    const admin = await Admin.findOne({ username }).populate('departmentId');
 
-      // Re-fetch to reflect escalation
-      const { data: refreshed } = await supabase
-        .from('grievances')
-        .select('*, departments:department_id(*)')
-        .order('created_at', { ascending: false });
-      if (refreshed) rows.splice(0, rows.length, ...refreshed);
+    if (!admin) {
+      return NextResponse.json(
+        { success: false, message: 'Admin account not found.' },
+        { status: 404 }
+      );
     }
 
-    const grievances = (rows || []).map((row) => shapeGrievance(row));
-
-    const stats = {
-      total: grievances.length,
-      pending: grievances.filter((g) => g.status === 'Pending').length,
-      inProgress: grievances.filter((g) => g.status === 'In Progress').length,
-      resolved: grievances.filter((g) => g.status === 'Resolved').length,
-      escalated: grievances.filter(
-        (g) => g.status === 'Escalated' || g.isEscalated
-      ).length,
-    };
-
-    let adminName = 'Super Admin';
-    if (username) {
-      const { data: adminRow } = await supabase
-        .from('admins')
-        .select('full_name')
-        .eq('username', username)
-        .maybeSingle();
-      if (adminRow) adminName = adminRow.full_name;
-    }
+    // 3. የዚህ ዲን ዲፓርትመንት የሆኑ ቅሬታዎችን ብቻ (Filtering) ማምጣት
+    const grievances = await Grievance.find({ departmentId: admin.departmentId?._id })
+      .sort({ createdAt: -1 });
 
     return NextResponse.json({
       success: true,
-      adminName,
+      adminName: admin.fullName,
+      department: admin.departmentId,
       grievances,
-      stats,
     });
   } catch (error: any) {
     return NextResponse.json(

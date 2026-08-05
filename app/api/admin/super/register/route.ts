@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server';
-import bcrypt from 'bcryptjs';
-import { supabase, shapeAdmin } from '@/lib/supabase';
+import connectMongo from '@/lib/mongodb';
+import Admin from '@/models/Admin';
 
 export async function POST(request: Request) {
   try {
+    await connectMongo();
     const { username, password, fullName, departmentId } = await request.json();
 
     if (!username || !password || !fullName || !departmentId) {
@@ -13,44 +14,28 @@ export async function POST(request: Request) {
       );
     }
 
-    const { data: existing } = await supabase
-      .from('admins')
-      .select('id')
-      .eq('username', username)
-      .maybeSingle();
-
-    if (existing) {
+    const existingUser = await Admin.findOne({ username });
+    if (existingUser) {
       return NextResponse.json(
         { success: false, message: 'Username already exists!' },
         { status: 400 }
       );
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    const { data: row, error } = await supabase
-      .from('admins')
-      .insert({
-        username,
-        password: hashedPassword,
-        full_name: fullName,
-        role: 'department_admin',
-        department_id: departmentId,
-      })
-      .select('*')
-      .maybeSingle();
-
-    if (error) throw error;
+    const newAdmin = await Admin.create({
+      username,
+      password,
+      fullName,
+      role: 'ADMIN',
+      departmentId,
+    });
 
     return NextResponse.json({
       success: true,
       message: `Account created for ${fullName}!`,
-      admin: shapeAdmin(row),
+      admin: newAdmin,
     });
   } catch (error: any) {
-    return NextResponse.json(
-      { success: false, message: error.message },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, message: error.message }, { status: 500 });
   }
 }

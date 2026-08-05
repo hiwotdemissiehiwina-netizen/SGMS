@@ -1,9 +1,12 @@
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
-import { supabase, shapeAdmin, shapeDepartment } from '@/lib/supabase';
+import dbConnect from '@/lib/mongodb'; // የዳታቤዝ ግንኙነት ማስተካከያ (እንደ ፕሮጀክት አወቃቀርዎ ሊለያይ ይችላል)
+import Admin from '@/models/Admin';   // የ Mongoose Admin Model
 
 export async function POST(req: Request) {
   try {
+    await dbConnect();
+
     const { username, password } = await req.json();
 
     if (!username || !password) {
@@ -13,22 +16,18 @@ export async function POST(req: Request) {
       );
     }
 
-    const { data: adminRow, error } = await supabase
-      .from('admins')
-      .select('*')
-      .eq('username', username)
-      .maybeSingle();
+    // አድሚኑን በዩዘርናም መፈለግ
+    const admin = await Admin.findOne({ username });
 
-    if (error) throw error;
-
-    if (!adminRow) {
+    if (!admin) {
       return NextResponse.json(
         { success: false, message: 'Invalid username or password' },
         { status: 401 }
       );
     }
 
-    const isMatch = await bcrypt.compare(password, adminRow.password);
+    // ፓስወርድ ማወዳደር (bcrypt ተጠቅመን)
+    const isMatch = await bcrypt.compare(password, admin.password);
 
     if (!isMatch) {
       return NextResponse.json(
@@ -37,44 +36,18 @@ export async function POST(req: Request) {
       );
     }
 
-    let department = null;
-    if (adminRow.department_id) {
-      const { data: deptRow } = await supabase
-        .from('departments')
-        .select('*')
-        .eq('id', adminRow.department_id)
-        .maybeSingle();
-      if (deptRow) department = shapeDepartment(deptRow);
-    }
-
-    const admin = shapeAdmin(adminRow, department);
-
-    const res = NextResponse.json({
+    // የተሳካ ሎጊን ሪስፖንስ መመለስ
+    return NextResponse.json({
       success: true,
       message: 'Login successful',
-      token: 'mock_secure_token_session',
+      token: 'mock_secure_token_session', // ቶከን የሚጠቀሙ ከሆነ እዚህ ማስገባት ይቻላል
       admin: {
         username: admin.username,
-        role: admin.role,
-        department: admin.department,
+        role: admin.role, // 'super-admin' ወይም 'admin' መሆኑን ዳታቤዙ ያመጣል
+        department: admin.department || null,
       },
     });
 
-    // Set cookies so server-side middleware can authenticate/authorize admin routes
-    res.cookies.set('adminToken', 'mock_secure_token_session', {
-      httpOnly: true,
-      sameSite: 'lax',
-      path: '/',
-      maxAge: 60 * 60 * 24 * 7,
-    });
-    res.cookies.set('adminRole', admin.role, {
-      httpOnly: true,
-      sameSite: 'lax',
-      path: '/',
-      maxAge: 60 * 60 * 24 * 7,
-    });
-
-    return res;
   } catch (error: any) {
     console.error('Admin Login Server Error:', error);
     return NextResponse.json(

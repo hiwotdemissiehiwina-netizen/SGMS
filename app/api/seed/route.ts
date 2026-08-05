@@ -1,8 +1,15 @@
 import { NextResponse } from 'next/server';
-import { supabase, shapeDepartment } from '@/lib/supabase';
+import connectToDatabase from '@/lib/mongodb';
+import Department from '@/models/Department';
 
 export async function GET() {
   try {
+    await connectToDatabase();
+
+    // ነባር ዲፓርትመንቶች ካሉ አጽድቶ በአዲሶቹ ለመተካት
+    await Department.deleteMany({});
+
+    // አዲሶቹ 10 ዲፓርትመንቶች
     const updatedDepartments = [
       { name: 'Aesthetics', code: 'AES', description: 'Department of Aesthetics & Beauty Therapy' },
       { name: 'Electrical & Electronics', code: 'EEE', description: 'Department of Electrical & Electronics Technology' },
@@ -16,42 +23,14 @@ export async function GET() {
       { name: 'Urban Agriculture', code: 'AGRI', description: 'Department of Urban Agriculture & Forestry' },
     ];
 
-    const createdDepts: any[] = [];
-
-    for (const dept of updatedDepartments) {
-      const { data: existing } = await supabase
-        .from('departments')
-        .select('id')
-        .eq('code', dept.code)
-        .maybeSingle();
-
-      if (existing) {
-        const { data: updated } = await supabase
-          .from('departments')
-          .update({ name: dept.name, description: dept.description })
-          .eq('id', existing.id)
-          .select('*')
-          .maybeSingle();
-        if (updated) createdDepts.push(shapeDepartment(updated));
-      } else {
-        const { data: inserted } = await supabase
-          .from('departments')
-          .insert(dept)
-          .select('*')
-          .maybeSingle();
-        if (inserted) createdDepts.push(shapeDepartment(inserted));
-      }
-    }
+    const createdDepts = await Department.insertMany(updatedDepartments);
 
     return NextResponse.json({
       success: true,
-      message: 'Departments synced successfully!',
+      message: 'ዲፓርትመንቶቹ በ10ሩ አዳዲስ ዘርፎች በተሳካ ሁኔታ ተቀይረዋል!',
       data: createdDepts,
     });
   } catch (error: any) {
-    return NextResponse.json(
-      { success: false, error: error.message },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }
