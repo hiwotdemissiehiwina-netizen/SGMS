@@ -5,7 +5,7 @@ import { useState } from 'react';
 export default function StudentPortalPage() {
   const [activeTab, setActiveTab] = useState<'submit' | 'track'>('submit');
   
-  // Form Data
+  // Form Data (Name እና ID ግዴታ አይደሉም)
   const [studentName, setStudentName] = useState('');
   const [studentId, setStudentId] = useState('');
   const [department, setDepartment] = useState('');
@@ -36,12 +36,13 @@ export default function StudentPortalPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          studentName: isAnonymous ? 'Anonymous' : studentName,
-          studentId: isAnonymous ? 'N/A' : (studentId || 'N/A'),
+          // ስም ካልተሞላ አውቶማቲክ Anonymous ይሆናል
+          studentName: isAnonymous || !studentName.trim() ? 'Anonymous' : studentName,
+          studentId: isAnonymous || !studentId.trim() ? 'N/A' : studentId,
           department,
           subject,
           message,
-          isAnonymous,
+          isAnonymous: isAnonymous || !studentName.trim(),
         }),
       });
 
@@ -148,97 +149,80 @@ export default function StudentPortalPage() {
 
             <form onSubmit={handleSubmit} className="space-y-4">
               
-              {/* Anonymous Checkbox */}
-              <div className="bg-amber-50 border border-amber-200 p-3.5 rounded-xl flex items-center justify-between">
+              {/* Optional Name & Student ID Fields */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label htmlFor="anon" className="font-bold text-sm text-stone-800 cursor-pointer">
-                    Submit Anonymously
+                  <label className="block text-sm font-semibold mb-1 text-gray-700">
+                    Full Name <span className="text-gray-400 font-normal">(Optional)</span>
                   </label>
-                  <p className="text-xs text-stone-500">Your identity will be completely hidden from staff.</p>
+                  <input
+                    type="text"
+                    value={studentName}
+                    onChange={(e) => setStudentName(e.target.value)}
+                    placeholder="Leave blank for anonymous"
+                    className="w-full px-4 py-2.5 border border-[#e6dcce] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5c1d1d] bg-white text-gray-800"
+                  />
                 </div>
-                <input
-                  id="anon"
-                  type="checkbox"
-                  checked={isAnonymous}
-                  onChange={(e) => setIsAnonymous(e.target.checked)}
-                  className="w-5 h-5 accent-[#5c1d1d] cursor-pointer"
-                />
+
+                <div>
+                  <label className="block text-sm font-semibold mb-1 text-gray-700">
+                    Student ID <span className="text-gray-400 font-normal">(Optional)</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={studentId}
+                    onChange={(e) => setStudentId(e.target.value)}
+                    placeholder="e.g. TMPC/1234/15"
+                    className="w-full px-4 py-2.5 border border-[#e6dcce] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5c1d1d] bg-white text-gray-800"
+                  />
+                </div>
               </div>
 
-              {!isAnonymous && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-semibold mb-1 text-gray-700">Full Name *</label>
-                    <input
-                      type="text"
-                      required={!isAnonymous}
-                      value={studentName}
-                      onChange={(e) => setStudentName(e.target.value)}
-                      placeholder="Enter full name"
-                      className="w-full px-4 py-2.5 border border-[#e6dcce] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5c1d1d] bg-white text-gray-800"
-                    />
-                  </div>
+              {/* Target Department Dropdown */}
+              <div>
+                <label className="block text-sm font-semibold mb-1 text-gray-700">Target Department *</label>
+                <select
+                  required
+                  value={department}
+                  onChange={(e) => setDepartment(e.target.value)}
+                  className="w-full px-4 py-2.5 border border-[#e6dcce] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5c1d1d] bg-white text-gray-800"
+                >
+                  <option value="">-- Select Department --</option>
+                  <option value="Aesthetics">Aesthetics</option>
+                  <option value="Electrical & Electronics">Electrical & Electronics</option>
+                  <option value="ICT">ICT</option>
+                  <option value="Textile & Garment">Textile & Garment</option>
+                  <option value="Hotel & Tourism">Hotel & Tourism</option>
+                  <option value="Automotive Technology">Automotive Technology</option>
+                  <option value="Wood Work & Metal Technology">Wood Work & Metal Technology</option>
+                  <option value="Business & Finance">Business & Finance</option>
+                  <option value="Construction Technology">Construction Technology</option>
+                  <option value="Urban Agriculture">Urban Agriculture</option>
+                </select>
+              </div>
 
-                  <div>
-                    <label className="block text-sm font-semibold mb-1 text-gray-700">
-                      Student ID <span className="text-gray-400 font-normal">(Optional)</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={studentId}
-                      onChange={(e) => setStudentId(e.target.value)}
-                      placeholder="e.g. TMPC/1234/15"
-                      className="w-full px-4 py-2.5 border border-[#e6dcce] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5c1d1d] bg-white text-gray-800"
-                    />
-                  </div>
-                </div>
-              )}
-
-            {/* Target Department Dropdown */}
-<div>
-  <label className="block text-sm font-semibold mb-1 text-gray-700">Target Department *</label>
-  <select
-    required
-    value={department}
-    onChange={(e) => setDepartment(e.target.value)}
-    className="w-full px-4 py-2.5 border border-[#e6dcce] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5c1d1d] bg-white text-gray-800"
-  >
-    <option value="">-- Select Department --</option>
-    <option value="Aesthetics">Aesthetics</option>
-    <option value="Electrical & Electronics">Electrical & Electronics</option>
-    <option value="ICT">ICT</option>
-    <option value="Textile & Garment">Textile & Garment</option>
-    <option value="Hotel & Tourism">Hotel & Tourism</option>
-    <option value="Automotive Technology">Automotive Technology</option>
-    <option value="Wood Work & Metal Technology">Wood Work & Metal Technology</option>
-    <option value="Business & Finance">Business & Finance</option>
-    <option value="Construction Technology">Construction Technology</option>
-    <option value="Urban Agriculture">Urban Agriculture</option>
-  </select>
-</div>
-
-{/* Subject / Category Dropdown (10 Options) */}
-<div>
-  <label className="block text-sm font-semibold mb-1 text-gray-700">Grievance Subject / Category *</label>
-  <select
-    required
-    value={subject}
-    onChange={(e) => setSubject(e.target.value)}
-    className="w-full px-4 py-2.5 border border-[#e6dcce] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5c1d1d] bg-white text-gray-800"
-  >
-    <option value="">-- Select Issue Category --</option>
-    <option value="Academic & Grading Issue"> Academic & Grading Issue (የነጥብ/ውጤት ቅሬታ)</option>
-    <option value="ID Card & Registration"> ID Card & Registration (የአይዲ እና የምዝገባ ሁኔታ)</option>
-    <option value="Department & Class Schedule"> Department & Class Schedule (የክፍል እና የትምህርት ፕሮግራም)</option>
-    <option value="Facility & Classroom Maintenance">Facility & Classroom Maintenance (የክፍል እና የመሳሪያዎች ብልሽት)</option>
-    <option value="Administrative Delay">Administrative Delay (የአስተዳደር እና የሰነድ መዘግየት)</option>
-    <option value="Library & Learning Resources">Library & Learning Resources (የቤተ-መጽሐፍት አገልግሎት)</option>
-    <option value="Practical Workshop & Lab Equipment">Practical Workshop & Lab Equipment (የላቦራቶሪ/ወርክሾፕ ዕቃዎች)</option>
-    <option value="Staff & Instructor Conduct">Staff & Instructor Conduct (የመምህራን/ሰራተኞች አስተናጋጅነት)</option>
-    <option value="Student Welfare & Discipline">Student Welfare & Discipline (የተማሪዎች ደህንነት እና ስነ-ምግባር)</option>
-    <option value="Other General Inquiry">Other General Inquiry (ሌሎች አጠቃላይ ጥያቄዎች)</option>
-  </select>
-</div>
+              {/* Subject / Category Dropdown */}
+              <div>
+                <label className="block text-sm font-semibold mb-1 text-gray-700">Grievance Subject / Category *</label>
+                <select
+                  required
+                  value={subject}
+                  onChange={(e) => setSubject(e.target.value)}
+                  className="w-full px-4 py-2.5 border border-[#e6dcce] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5c1d1d] bg-white text-gray-800"
+                >
+                  <option value="">-- Select Issue Category --</option>
+                  <option value="Academic & Grading Issue">1. Academic & Grading Issue (የነጥብ/ውጤት ቅሬታ)</option>
+                  <option value="ID Card & Registration">2. ID Card & Registration (የአይዲ እና የምዝገባ ሁኔታ)</option>
+                  <option value="Department & Class Schedule">3. Department & Class Schedule (የክፍል እና የትምህርት ፕሮግራም)</option>
+                  <option value="Facility & Classroom Maintenance">4. Facility & Classroom Maintenance (የክፍል እና የመሳሪያዎች ብልሽት)</option>
+                  <option value="Administrative Delay">5. Administrative Delay (የአስተዳደር እና የሰነድ መዘግየት)</option>
+                  <option value="Library & Learning Resources">6. Library & Learning Resources (የቤተ-መጽሐፍት አገልግሎት)</option>
+                  <option value="Practical Workshop & Lab Equipment">7. Practical Workshop & Lab Equipment (የላቦራቶሪ/ወርክሾፕ ዕቃዎች)</option>
+                  <option value="Staff & Instructor Conduct">8. Staff & Instructor Conduct (የመምህራን/ሰራተኞች አስተናጋጅነት)</option>
+                  <option value="Student Welfare & Discipline">9. Student Welfare & Discipline (የተማሪዎች ደህንነት እና ስነ-ምግባር)</option>
+                  <option value="Other General Inquiry">10. Other General Inquiry (ሌሎች አጠቃላይ ጥያቄዎች)</option>
+                </select>
+              </div>
 
               {/* Description */}
               <div>
